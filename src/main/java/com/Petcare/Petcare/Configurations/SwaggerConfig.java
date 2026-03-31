@@ -1,5 +1,11 @@
 package com.Petcare.Petcare.Configurations;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
@@ -7,11 +13,6 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
 
 /**
  * Configuration for Swagger/OpenAPI documentation with JWT authentication.
@@ -20,6 +21,7 @@ import java.util.List;
  * - Adds JWT bearer token authentication to Swagger UI
  * - Documents all API endpoints
  * - Provides contact information
+ * - Uses configured base URL (petcare.api.base-url property)
  */
 @Configuration
 public class SwaggerConfig {
@@ -29,6 +31,10 @@ public class SwaggerConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
+        // Use configured base URL - detectServerUrl removed as it requires HTTP request context
+        // which is not available at startup. For production, configure petcare.api.base-url
+        String serverUrl = baseUrl;
+        
         return new OpenAPI()
                 .info(new Info()
                         .title("Petcare API")
@@ -59,7 +65,7 @@ public class SwaggerConfig {
                                 .name("Petcare Team")
                                 .email("support@petcare.com")))
                 .servers(List.of(
-                        new Server().url(baseUrl).description("Local server")))
+                        new Server().url(serverUrl).description("Server")))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth", new SecurityScheme()
@@ -93,6 +99,6 @@ public class SwaggerConfig {
                                        ```
                                        Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
                                        ```
-                                    """)));
+                                     """)));
     }
 }

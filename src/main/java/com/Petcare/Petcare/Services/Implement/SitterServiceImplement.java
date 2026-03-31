@@ -10,11 +10,16 @@ import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.SitterProfileRepository;
 import com.Petcare.Petcare.Repositories.UserRepository;
 import com.Petcare.Petcare.Services.SitterService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import java.util.stream.Collectors;
 
@@ -48,6 +53,7 @@ import java.util.stream.Collectors;
  * @see SitterService
  * @see SitterProfile
  */
+@Slf4j
 @Service
 public class SitterServiceImplement implements SitterService {
 
@@ -88,6 +94,7 @@ public class SitterServiceImplement implements SitterService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "sitters", allEntries = true)
     public SitterProfileDTO createSitterProfile(Long userId, SitterProfileDTO sitterProfileDTO) {
         // --- Validación Interna ---
         // Buscamos al usuario por su ID. Si no lo encontramos, es un error irrecuperable.
@@ -152,6 +159,7 @@ public class SitterServiceImplement implements SitterService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "sitters", key = "#userId")
     public SitterProfileDTO updateSitterProfile(Long userId, SitterProfileDTO sitterProfileDTO) {
         // Primero, obtenemos el perfil existente de la base de datos.
         SitterProfile profile = sitterProfileRepository.findByUserId(userId)
@@ -199,6 +207,7 @@ public class SitterServiceImplement implements SitterService {
      */
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "sitters", key = "'all'")
     public List<SitterProfileDTO> getAllSitterProfiles() {
         // Obtenemos todas las entidades de perfil de la base de datos.
         List<SitterProfile> profiles = sitterProfileRepository.findAll();
@@ -219,6 +228,7 @@ public class SitterServiceImplement implements SitterService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "sitters", key = "#userId")
     public void deleteSitterProfile(Long userId) {
         // Buscamos el perfil que se va a eliminar. Si no existe, lanzará una excepción.
         SitterProfile profile = sitterProfileRepository.findByUserId(userId)
@@ -238,6 +248,7 @@ public class SitterServiceImplement implements SitterService {
      */
     @Override
     @Transactional(readOnly = true) // Marcado como solo lectura porque es una operación de consulta.
+    @Cacheable(value = "sitters", key = "#city")
     public List<SitterProfileSummary> findSitters(String city) {
 
         List<SitterProfile> profiles;
@@ -258,6 +269,28 @@ public class SitterServiceImplement implements SitterService {
         return profiles.stream()
                 .map(sitterProfileMapper::toSummaryDto)
                 .collect(Collectors.toList());
+    }
+
+    // ========== MÉTODOS ASYNC ==========
+
+    /**
+     * Get all sitter profiles asynchronously.
+     */
+    @Async("taskExecutor")
+    public CompletableFuture<List<SitterProfileDTO>> getAllSitterProfilesAsync() {
+        log.debug("Executing getAllSitterProfilesAsync in background thread");
+        List<SitterProfileDTO> profiles = getAllSitterProfiles();
+        return CompletableFuture.completedFuture(profiles);
+    }
+
+    /**
+     * Find sitters by city asynchronously.
+     */
+    @Async("taskExecutor")
+    public CompletableFuture<List<SitterProfileSummary>> findSittersAsync(String city) {
+        log.debug("Executing findSittersAsync({}) in background thread", city);
+        List<SitterProfileSummary> sitters = findSitters(city);
+        return CompletableFuture.completedFuture(sitters);
     }
 
 }
