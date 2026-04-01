@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @Slf4j
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class InvoiceNotFoundException extends RuntimeException {
-    
+     
     public InvoiceNotFoundException(Long id) {
         super("Factura no encontrada con ID: " + id);
         log.warn("Invoice not found with ID: {}", id);

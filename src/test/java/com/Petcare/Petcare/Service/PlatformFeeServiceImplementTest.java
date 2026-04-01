@@ -2,6 +2,7 @@ package com.Petcare.Petcare.Service;
 
 import com.Petcare.Petcare.DTOs.PlatformFee.CreatePlatformFeeRequest;
 import com.Petcare.Petcare.DTOs.PlatformFee.PlatformFeeResponse;
+import com.Petcare.Petcare.Exception.Business.BookingNotFoundException;
 import com.Petcare.Petcare.Models.Booking.Booking;
 import com.Petcare.Petcare.Models.Booking.BookingStatus;
 import com.Petcare.Petcare.Models.PlatformFee;
@@ -101,8 +102,8 @@ class PlatformFeeServiceImplementTest {
 
             // When/Then
             assertThatThrownBy(() -> platformFeeService.calculateAndCreateFee(request))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Reserva no encontrada");
+                    .isInstanceOf(BookingNotFoundException.class)
+                    .hasMessageContaining("99");
         }
 
         @Test

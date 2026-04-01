@@ -8,6 +8,7 @@ import com.Petcare.Petcare.DTOs.Pet.PetSummaryResponse;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileSummary;
 import com.Petcare.Petcare.DTOs.User.*;
 import com.Petcare.Petcare.Exception.Business.EmailAlreadyExistsException;
+import com.Petcare.Petcare.Exception.Business.EmailNotFoundException;
 import com.Petcare.Petcare.Exception.Business.UserNotFoundException;
 import com.Petcare.Petcare.Models.Account.Account;
 import com.Petcare.Petcare.Models.Account.AccountUser;
@@ -167,12 +168,12 @@ public class UserServiceImplement implements UserService {
     @Override
     @CacheEvict(value = "users", allEntries = true)
     public AuthResponse registerUserSitter(CreateUserRequest request) {
-        log.info("Intento de registro para email: {}", request.getEmail());
+        log.info("[Action] [RegisterUserSitter]: email={}", request.getEmail());
 
         // 1. Validar si el email ya existe
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            log.warn("Intento de registro con email duplicado: {}", request.getEmail());
-            throw new IllegalArgumentException("El email ya está registrado: " + request.getEmail());
+            log.warn("[Action] [RegisterUserSitter]: Email duplicado={}", request.getEmail());
+            throw new EmailAlreadyExistsException(request.getEmail());
         }
 
         // 2. Crear la entidad User
@@ -248,12 +249,12 @@ public class UserServiceImplement implements UserService {
     @Transactional
     @CacheEvict(value = "users", allEntries = true)
     public AuthResponse registerUser(CreateUserRequest request) {
-        log.info("Intento de registro para email: {}", request.getEmail());
+        log.info("[Action] [RegisterUser]: email={}", request.getEmail());
 
         // 1. Validar si el email ya existe
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            log.warn("Intento de registro con email duplicado: {}", request.getEmail());
-            throw new IllegalArgumentException("El email ya está registrado: " + request.getEmail());
+            log.warn("[Action] [RegisterUser]: Email duplicado={}", request.getEmail());
+            throw new EmailAlreadyExistsException(request.getEmail());
         }
 
         // 2. Crear la entidad User
@@ -367,7 +368,7 @@ public class UserServiceImplement implements UserService {
     public UserResponse getUserById(Long id) {
         log.debug("Buscando usuario por ID: {}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con el ID " + id));
+                .orElseThrow(() -> new UserNotFoundException(id));
 
         return UserResponse.fromEntity(user);
     }
@@ -408,8 +409,8 @@ public class UserServiceImplement implements UserService {
 
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("Usuario no encontrado para actualizar con ID: {}", id);
-                    return new UserNotFoundException("Usuario no encontrado con id " + id);
+                    log.error("[Action] [UpdateUser]: Usuario no encontrado id={}", id);
+                    return new UserNotFoundException(id);
                 });
 
         // Actualizar campos básicos
@@ -476,17 +477,17 @@ public class UserServiceImplement implements UserService {
     @Transactional
     @CacheEvict(value = "users", allEntries = true)
     public UserResponse createUserByAdmin(CreateUserRequest request, Role role) {
-        log.info("Creando usuario por admin con rol: {} para email: {}", role, request.getEmail());
+        log.info("[Action] [CreateUserByAdmin]: role={}, email={}", role, request.getEmail());
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            log.warn("Intento de crear usuario con email duplicado: {}", request.getEmail());
-            throw new IllegalArgumentException("El email ya está registrado: " + request.getEmail());
+            log.warn("[Action] [CreateUserByAdmin]: Email duplicado={}", request.getEmail());
+            throw new EmailAlreadyExistsException(request.getEmail());
         }
 
         User newUser = createUserEntity(request, role);
         User savedUser = userRepository.save(newUser);
 
-        log.info("Usuario creado exitosamente por admin: {} con rol: {}", savedUser.getEmail(), role);
+        log.info("[Action] [CreateUserByAdmin]: Usuario creado id={}, email={}", savedUser.getId(), savedUser.getEmail());
         return UserResponse.fromEntity(savedUser);
     }
 
@@ -506,8 +507,8 @@ public class UserServiceImplement implements UserService {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("Usuario no encontrado para cambiar estado con ID: {}", id);
-                    return new RuntimeException("Usuario no encontrado con id " + id);
+                    log.error("[Action] [ToggleUserActive]: Usuario no encontrado id={}", id);
+                    return new UserNotFoundException(id);
                 });
 
         user.setActive(active);
@@ -534,8 +535,8 @@ public class UserServiceImplement implements UserService {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("Usuario no encontrado para verificar email con ID: {}", id);
-                    return new RuntimeException("Usuario no encontrado con id " + id);
+                    log.error("[Action] [MarkEmailAsVerified]: Usuario no encontrado id={}", id);
+                    return new UserNotFoundException(id);
                 });
 
         user.setEmailVerifiedAt(LocalDateTime.now());
@@ -699,7 +700,7 @@ public class UserServiceImplement implements UserService {
 
             // 2. Buscar al usuario
             User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado para el token de verificación."));
+                    .orElseThrow(() -> new EmailNotFoundException(email));
 
             // 3. Verificar si ya está verificado
             if (user.isEmailVerified()) {

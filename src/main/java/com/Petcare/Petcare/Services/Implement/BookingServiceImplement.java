@@ -223,7 +223,7 @@ public class BookingServiceImplement implements BookingService {
 
         // 6. Persistencia transaccional (sin cambios)
         Booking savedBooking = bookingRepository.save(newBooking);
-        log.info("Reserva creada exitosamente con ID: {}", savedBooking.getId());
+        log.info("[Action] [BookingCreated]: id={}", savedBooking.getId());
 
         // 7. Procesamiento post-creación (sin cambios)
         processPostCreationTasks(savedBooking);
@@ -256,7 +256,7 @@ public class BookingServiceImplement implements BookingService {
     @Override
     @Cacheable(value = "bookings", key = "'all'")
     public Page<BookingSummaryResponse> getAllBookings(Pageable pageable) {
-        log.debug("Consultando todas las reservas con paginación: {}", pageable);
+        log.debug("[Action] [GetAllBookings]: paginación={}", pageable);
 
         Page<Booking> bookingsPage = bookingRepository.findAllWithBasicInfo(pageable);
 
@@ -602,7 +602,7 @@ public class BookingServiceImplement implements BookingService {
                 .orElseThrow(() -> new ServiceOfferingNotFoundException(serviceOfferingId));
 
         if (!serviceOffering.getSitterId().equals(sitter.getId())) {
-            throw new IllegalArgumentException("La oferta de servicio no pertenece al cuidador especificado");
+            throw new ServiceOfferingOwnershipException(serviceOfferingId);
         }
 
         if (!serviceOffering.isActive()) {

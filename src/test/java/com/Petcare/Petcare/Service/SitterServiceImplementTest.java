@@ -3,6 +3,7 @@ package com.Petcare.Petcare.Service;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileDTO;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileMapper;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileSummary;
+import com.Petcare.Petcare.Exception.Business.SitterNotFoundException;
 import com.Petcare.Petcare.Exception.Business.SitterProfileAlreadyExistsException;
 import com.Petcare.Petcare.Exception.Business.SitterProfileNotFoundException;
 import com.Petcare.Petcare.Models.SitterProfile;
@@ -149,14 +150,14 @@ class SitterServiceImplementTest {
          * <p><strong>Resultado esperado:</strong> Lanza IllegalArgumentException</p>
          */
         @Test
-        @DisplayName("Fallo: Debería lanzar IllegalArgumentException cuando usuario no existe")
-        void createSitterProfile_WhenUserNotFound_ShouldThrowIllegalArgumentException() {
+        @DisplayName("Fallo: Debería lanzar SitterNotFoundException cuando usuario no existe")
+        void createSitterProfile_WhenUserNotFound_ShouldThrowSitterNotFoundException() {
             // Arrange
             when(userRepository.findById(NONEXISTENT_USER_ID)).thenReturn(Optional.empty());
 
             // Act & Assert
             assertThatThrownBy(() -> sitterService.createSitterProfile(NONEXISTENT_USER_ID, testSitterProfileDTO))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(SitterNotFoundException.class)
                     .hasMessageContaining("Cuidador no encontrado con ID: " + NONEXISTENT_USER_ID);
 
             // Assert - Verificación de que no se intentó crear el perfil

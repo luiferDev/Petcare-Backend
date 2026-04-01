@@ -41,7 +41,7 @@ public class ServiceOffering {
      * Identificador del cuidador que ofrece el servicio.
      * Referencia al ID del sitter en la tabla correspondiente.
      */
-    @JoinColumn(name = "service_offering_id")
+    @Column(name = "sitter_id")
     private Long sitterId;
 
     /**

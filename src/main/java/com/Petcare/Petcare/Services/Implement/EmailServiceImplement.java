@@ -5,8 +5,7 @@ import com.Petcare.Petcare.DTOs.Email.Email;
 import com.Petcare.Petcare.Services.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -54,10 +53,9 @@ import java.util.regex.Pattern;
  * @see Email
  * @see Attachment
  */
+@Slf4j
 @Service
 public class EmailServiceImplement implements EmailService {
-
-    private static final Logger logger = LoggerFactory.getLogger(EmailServiceImplement.class);
 
     // Patrón regex para validación de emails según RFC 5322
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
@@ -89,7 +87,7 @@ public class EmailServiceImplement implements EmailService {
     public EmailServiceImplement(JavaMailSender javaMailSender, TemplateEngine templateEngine) {
         this.javaMailSender = javaMailSender;
         this.templateEngine = templateEngine;
-        logger.info("EmailService inicializado correctamente");
+        log.info("EmailService inicializado correctamente");
     }
 
     /**
@@ -105,7 +103,7 @@ public class EmailServiceImplement implements EmailService {
      */
     @Override
     public void sendEmail(Email email) throws MessagingException {
-        logger.info("Iniciando envío de correo a: {}", email.getTo());
+        log.info("Iniciando envío de correo a: {}", email.getTo());
 
         try {
             // Validación previa
@@ -114,22 +112,22 @@ public class EmailServiceImplement implements EmailService {
             // Establecer remitente por defecto si no está especificado
             if (email.getFrom() == null || email.getFrom().trim().isEmpty()) {
                 email.setFrom(defaultFromEmail);
-                logger.debug("Establecido remitente por defecto: {}", defaultFromEmail);
+                log.debug("Establecido remitente por defecto: {}", defaultFromEmail);
             }
 
             // Determinar tipo de envío
             if (email.getAttachments() != null && !email.getAttachments().isEmpty()) {
-                logger.debug("Enviando correo con {} archivos adjuntos", email.getAttachments().size());
+                log.debug("Enviando correo con {} archivos adjuntos", email.getAttachments().size());
                 sendEmailWithAttachments(email);
             } else {
-                logger.debug("Enviando correo HTML estándar");
+                log.debug("Enviando correo HTML estándar");
                 sendHtmlEmail(email);
             }
 
-            logger.info("Correo enviado exitosamente a: {}", email.getTo());
+            log.info("Correo enviado exitosamente a: {}", email.getTo());
 
         } catch (Exception e) {
-            logger.error("Error al enviar correo a {}: {}", email.getTo(), e.getMessage(), e);
+            log.error("Error al enviar correo a {}: {}", email.getTo(), e.getMessage(), e);
             throw new MessagingException("Error al procesar el envío de correo: " + e.getMessage(), e);
         }
     }
@@ -151,7 +149,7 @@ public class EmailServiceImplement implements EmailService {
     public void sendVerificationEmail(String recipientEmail, String recipientName,
                                       String verificationUrl, int expirationHours) throws MessagingException {
 
-        logger.info("Enviando correo de verificación a: {} ({})", recipientName, recipientEmail);
+        log.info("Enviando correo de verificación a: {} ({})", recipientName, recipientEmail);
 
         // Validación de parámetros
         if (recipientEmail == null || recipientEmail.trim().isEmpty()) {
@@ -197,10 +195,10 @@ public class EmailServiceImplement implements EmailService {
             // Enviar usando el método principal
             sendHtmlEmail(email);
 
-            logger.info("Correo de verificación enviado exitosamente a: {}", recipientEmail);
+            log.info("Correo de verificación enviado exitosamente a: {}", recipientEmail);
 
         } catch (Exception e) {
-            logger.error("Error al enviar correo de verificación a {}: {}", recipientEmail, e.getMessage(), e);
+            log.error("Error al enviar correo de verificación a {}: {}", recipientEmail, e.getMessage(), e);
             throw new MessagingException("Error al enviar correo de verificación: " + e.getMessage(), e);
         }
     }
@@ -218,7 +216,7 @@ public class EmailServiceImplement implements EmailService {
      */
     @Override
     public void sendEmailWithAttachments(Email email) throws MessagingException {
-        logger.info("Enviando correo con adjuntos a: {}", email.getTo());
+        log.info("Enviando correo con adjuntos a: {}", email.getTo());
 
         if (email.getAttachments() == null || email.getAttachments().isEmpty()) {
             throw new IllegalArgumentException("No se especificaron archivos adjuntos para enviar");
@@ -246,7 +244,7 @@ public class EmailServiceImplement implements EmailService {
             for (Attachment attachment : email.getAttachments()) {
                 validateAttachment(attachment);
                 helper.addAttachment(attachment.getName(), attachment.getResource());
-                logger.debug("Adjuntado archivo: {} (tipo: {})",
+                log.debug("Adjuntado archivo: {} (tipo: {})",
                         attachment.getName(), attachment.getContentType());
             }
 
@@ -257,11 +255,11 @@ public class EmailServiceImplement implements EmailService {
             // Enviar correo
             javaMailSender.send(message);
 
-            logger.info("Correo con {} adjuntos enviado exitosamente a: {}",
+            log.info("Correo con {} adjuntos enviado exitosamente a: {}",
                     email.getAttachments().size(), email.getTo());
 
         } catch (Exception e) {
-            logger.error("Error al enviar correo con adjuntos a {}: {}", email.getTo(), e.getMessage(), e);
+            log.error("Error al enviar correo con adjuntos a {}: {}", email.getTo(), e.getMessage(), e);
             throw new MessagingException("Error al enviar correo con archivos adjuntos: " + e.getMessage(), e);
         }
     }
@@ -316,7 +314,7 @@ public class EmailServiceImplement implements EmailService {
             }
         }
 
-        logger.debug("Email validado correctamente para: {}", email.getTo());
+        log.debug("Email validado correctamente para: {}", email.getTo());
         return true;
     }
 
@@ -344,10 +342,10 @@ public class EmailServiceImplement implements EmailService {
             helper.setText(htmlContent, true);
 
             javaMailSender.send(message);
-            logger.debug("Correo HTML enviado exitosamente");
+            log.debug("Correo HTML enviado exitosamente");
 
         } catch (Exception e) {
-            logger.error("Error al enviar correo HTML: {}", e.getMessage(), e);
+            log.error("Error al enviar correo HTML: {}", e.getMessage(), e);
             throw new MessagingException("Error al enviar el correo HTML: " + e.getMessage(), e);
         }
     }
@@ -376,12 +374,12 @@ public class EmailServiceImplement implements EmailService {
 
 
             String htmlContent = templateEngine.process(templateName, context);
-            logger.debug("Plantilla '{}' procesada correctamente", templateName);
+            log.debug("Plantilla '{}' procesada correctamente", templateName);
 
             return htmlContent;
 
         } catch (Exception e) {
-            logger.error("Error al procesar plantilla '{}': {}", email.getTemplateName(), e.getMessage(), e);
+            log.error("Error al procesar plantilla '{}': {}", email.getTemplateName(), e.getMessage(), e);
             throw new IllegalArgumentException("Error al procesar la plantilla: " + e.getMessage(), e);
         }
     }
@@ -433,7 +431,7 @@ public class EmailServiceImplement implements EmailService {
                     totalSize += attachment.getResource().contentLength();
                 }
             } catch (Exception e) {
-                logger.warn("No se pudo determinar el tamaño del adjunto '{}': {}",
+                log.warn("No se pudo determinar el tamaño del adjunto '{}': {}",
                         attachment.getName(), e.getMessage());
             }
         }
@@ -453,7 +451,7 @@ public class EmailServiceImplement implements EmailService {
             templateEngine.process(templateName, new Context());
 
         } catch (Exception e) {
-            logger.error("Plantilla '{}' no encontrada o inaccesible: {}", templateName, e.getMessage());
+            log.error("Plantilla '{}' no encontrada o inaccesible: {}", templateName, e.getMessage());
             throw new IllegalArgumentException("La plantilla especificada no existe: " + templateName, e);
         }
     }
@@ -471,15 +469,15 @@ public class EmailServiceImplement implements EmailService {
      */
     @Async("taskExecutor")
     public void sendEmailAsync(Email email) {
-        logger.info("Iniciando envío async de email a: {}", email.getTo());
+        log.info("Iniciando envío async de email a: {}", email.getTo());
         long startTime = System.currentTimeMillis();
         
         try {
             sendEmail(email);
             long duration = System.currentTimeMillis() - startTime;
-            logger.info("Email enviado async exitosamente a {} en {}ms", email.getTo(), duration);
+            log.info("Email enviado async exitosamente a {} en {}ms", email.getTo(), duration);
         } catch (Exception e) {
-            logger.error("Error enviando email async a {}: {}", email.getTo(), e.getMessage());
+            log.error("Error enviando email async a {}: {}", email.getTo(), e.getMessage());
         }
     }
 
@@ -495,14 +493,14 @@ public class EmailServiceImplement implements EmailService {
      */
     @Async("taskExecutor")
     public java.util.concurrent.CompletableFuture<Boolean> sendEmailWithResultAsync(Email email) {
-        logger.info("Iniciando envío async con resultado a: {}", email.getTo());
+        log.info("Iniciando envío async con resultado a: {}", email.getTo());
         
         try {
             sendEmail(email);
-            logger.info("Email enviado exitosamente a: {}", email.getTo());
+            log.info("Email enviado exitosamente a: {}", email.getTo());
             return java.util.concurrent.CompletableFuture.completedFuture(true);
         } catch (Exception e) {
-            logger.error("Error enviando email a {}: {}", email.getTo(), e.getMessage());
+            log.error("Error enviando email a {}: {}", email.getTo(), e.getMessage());
             return java.util.concurrent.CompletableFuture.completedFuture(false);
         }
     }

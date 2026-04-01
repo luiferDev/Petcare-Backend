@@ -4,7 +4,13 @@ import com.Petcare.Petcare.DTOs.Invoice.CreateInvoiceRequest;
 import com.Petcare.Petcare.DTOs.Invoice.InvoiceDetailResponse;
 import com.Petcare.Petcare.DTOs.Invoice.InvoiceSummaryResponse;
 import com.Petcare.Petcare.DTOs.Invoice.UpdateInvoiceRequest;
-import com.Petcare.Petcare.Exception.Business.*;
+import com.Petcare.Petcare.Exception.Business.BookingNotFoundException;
+import com.Petcare.Petcare.Exception.Business.BookingStateException;
+import com.Petcare.Petcare.Exception.Business.CancellationReasonRequiredException;
+import com.Petcare.Petcare.Exception.Business.InvalidAmountException;
+import com.Petcare.Petcare.Exception.Business.InvoiceAlreadyExistsException;
+import com.Petcare.Petcare.Exception.Business.InvoiceNotFoundException;
+import com.Petcare.Petcare.Exception.Business.InvoiceStateException;
 import com.Petcare.Petcare.Models.Booking.Booking;
 import com.Petcare.Petcare.Models.Booking.BookingStatus;
 import com.Petcare.Petcare.Models.Invoice.Invoice;
@@ -195,7 +201,7 @@ public class InvoiceServiceImplement implements InvoiceService {
     @Override
     @Transactional
     public InvoiceDetailResponse generateInvoiceForBooking(CreateInvoiceRequest request) {
-        log.info("Iniciando generación completa de factura para reserva ID: {}", request.getBookingId());
+        log.info("[Action] [GenerateInvoice]: bookingId={}", request.getBookingId());
 
         try {
             // 1. Validación exhaustiva de la reserva

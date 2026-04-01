@@ -3,8 +3,11 @@ package com.Petcare.Petcare.Services.Implement;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileDTO;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileMapper;
 import com.Petcare.Petcare.DTOs.Sitter.SitterProfileSummary;
+import com.Petcare.Petcare.Exception.Business.SitterInactiveException;
+import com.Petcare.Petcare.Exception.Business.SitterNotFoundException;
 import com.Petcare.Petcare.Exception.Business.SitterProfileAlreadyExistsException;
 import com.Petcare.Petcare.Exception.Business.SitterProfileNotFoundException;
+import com.Petcare.Petcare.Exception.Business.UserNotFoundException;
 import com.Petcare.Petcare.Models.SitterProfile;
 import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.SitterProfileRepository;
@@ -99,7 +102,7 @@ public class SitterServiceImplement implements SitterService {
         // --- Validación Interna ---
         // Buscamos al usuario por su ID. Si no lo encontramos, es un error irrecuperable.
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Cuidador no encontrado con ID: " + userId));
+                .orElseThrow(() -> new SitterNotFoundException(userId));
 
 
         // Verificamos que no estemos creando un perfil para un usuario que ya tiene uno.
@@ -278,7 +281,7 @@ public class SitterServiceImplement implements SitterService {
      */
     @Async("taskExecutor")
     public CompletableFuture<List<SitterProfileDTO>> getAllSitterProfilesAsync() {
-        log.debug("Executing getAllSitterProfilesAsync in background thread");
+        log.debug("[Action] [GetAllSitterProfilesAsync]: ejecutándose en hilo de fondo");
         List<SitterProfileDTO> profiles = getAllSitterProfiles();
         return CompletableFuture.completedFuture(profiles);
     }
@@ -288,7 +291,7 @@ public class SitterServiceImplement implements SitterService {
      */
     @Async("taskExecutor")
     public CompletableFuture<List<SitterProfileSummary>> findSittersAsync(String city) {
-        log.debug("Executing findSittersAsync({}) in background thread", city);
+        log.debug("[Action] [FindSittersAsync]: city={}, ejecutándose en hilo de fondo", city);
         List<SitterProfileSummary> sitters = findSitters(city);
         return CompletableFuture.completedFuture(sitters);
     }

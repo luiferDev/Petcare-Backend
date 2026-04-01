@@ -77,7 +77,7 @@ public class PetServiceImplement implements PetService {
     @Transactional
     @CacheEvict(value = "pets", allEntries = true)
     public PetResponse createPet(CreatePetRequest petRequest) {
-        log.info("Iniciando creación de mascota para cuenta ID: {}", petRequest.getAccountId());
+        log.info("[Action] [CreatePet]: accountId={}", petRequest.getAccountId());
 
         try {
             // 1. Validar que la cuenta existe y está activa
@@ -85,13 +85,13 @@ public class PetServiceImplement implements PetService {
                     .orElseThrow(() -> new AccountNotFoundException(petRequest.getAccountId()));
 
             if (!account.isActive()) {
-                log.error("Intento de crear mascota en cuenta inactiva ID: {}", account.getId());
+                log.error("[Action] [CreatePet]: Intento de crear en cuenta inactiva id={}", account.getId());
                 throw new InactiveAccountException(account.getId());
             }
 
             // 2. Validar duplicados opcionales (nombres únicos por cuenta)
             if (petRepository.existsByNameIgnoreCaseAndAccountId(petRequest.getName(), petRequest.getAccountId())) {
-                log.warn("Intento de crear mascota con nombre duplicado '{}' en cuenta {}",
+                log.warn("[Action] [CreatePet]: Intento de nombre duplicado '{}' en cuenta {}",
                         petRequest.getName(), petRequest.getAccountId());
                 throw new PetAlreadyExistsException(petRequest.getName());
             }
@@ -104,7 +104,7 @@ public class PetServiceImplement implements PetService {
 
             // 4. Guardar en base de datos
             Pet savedPet = petRepository.save(newPet);
-            log.info("Mascota creada exitosamente con ID: {} para cuenta: {}", savedPet.getId(), account.getId());
+             log.info("[Action] [PetCreated]: id={}, accountId={}", savedPet.getId(), account.getId());
 
             // 5. Retornar DTO de respuesta
             return PetResponse.fromEntity(savedPet);
@@ -119,7 +119,7 @@ public class PetServiceImplement implements PetService {
     @Transactional(readOnly = true)
     @Cacheable(value = "pets", key = "#id")
     public PetResponse getPetById(Long id) {
-        log.debug("Buscando mascota con ID: {}", id);
+        log.debug("[Action] [GetPetById]: id={}", id);
 
         Pet pet = petRepository.findById(id)
                 .orElseThrow(() -> new PetNotFoundException(id));

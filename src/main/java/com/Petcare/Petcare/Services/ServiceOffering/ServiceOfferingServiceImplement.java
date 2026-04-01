@@ -3,6 +3,11 @@ package com.Petcare.Petcare.Services.ServiceOffering;
 import com.Petcare.Petcare.DTOs.ServiceOffering.CreateServiceOfferingDTO;
 import com.Petcare.Petcare.DTOs.ServiceOffering.ServiceOfferingDTO;
 import com.Petcare.Petcare.DTOs.ServiceOffering.UpdateServiceOfferingDTO;
+import com.Petcare.Petcare.Exception.Business.ServiceOfferingAlreadyExistsException;
+import com.Petcare.Petcare.Exception.Business.ServiceOfferingInactiveException;
+import com.Petcare.Petcare.Exception.Business.ServiceOfferingNotFoundException;
+import com.Petcare.Petcare.Exception.Business.InvalidDurationException;
+import com.Petcare.Petcare.Exception.Business.UserNotFoundException;
 import com.Petcare.Petcare.Models.ServiceOffering.ServiceOffering;
 import com.Petcare.Petcare.Models.User.User;
 import com.Petcare.Petcare.Repositories.ServiceOfferingRepository;
@@ -69,19 +74,19 @@ public class ServiceOfferingServiceImplement implements ServiceOfferingService {
         //Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         //String username = authentication.getName();
         User currentUser = userRepository.findById (id)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+                .orElseThrow(() -> new UserNotFoundException(id));
 
         if (serviceOfferingRepository.existsBySitterIdAndName(currentUser.getId(), createServiceOfferingDTO.name())) {
-            throw new IllegalArgumentException("Ya existe un servicio con este nombre para este usuario");
+            throw new ServiceOfferingAlreadyExistsException("Ya existe un servicio con este nombre para este usuario");
         }
 
         //crear una validacion para que no hayan dos servicios con elmismo nombre
         if (serviceOfferingRepository.existsByName(createServiceOfferingDTO.name())) {
-            throw new IllegalArgumentException("Ya existe un servicio con este nombre");
+            throw new ServiceOfferingAlreadyExistsException("Ya existe un servicio con este nombre");
         }
 
         if (createServiceOfferingDTO.durationInMinutes() < 15) {
-            throw new IllegalArgumentException("La duración mínima del servicio es 15 minutos");
+            throw new InvalidDurationException("La duración mínima del servicio es 15 minutos");
         }
         
         ServiceOffering serviceOffering = new ServiceOffering();
@@ -108,7 +113,7 @@ public class ServiceOfferingServiceImplement implements ServiceOfferingService {
     @Override
     public List < ServiceOfferingDTO > getAllSetvicesByUserId(Long userId) {
         User currentUser = userRepository.findById (userId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         return serviceOfferingRepository.findBySitterId(currentUser.getId())
                 .stream()
@@ -127,7 +132,7 @@ public class ServiceOfferingServiceImplement implements ServiceOfferingService {
     @Cacheable(value = "services", key = "#id")
     public ServiceOfferingDTO getServiceById(Long id) {
         ServiceOffering service = serviceOfferingRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Servicio no encontrado con ID: " + id));
+                .orElseThrow(() -> new ServiceOfferingNotFoundException(id));
         return new ServiceOfferingDTO(service);
     }
 

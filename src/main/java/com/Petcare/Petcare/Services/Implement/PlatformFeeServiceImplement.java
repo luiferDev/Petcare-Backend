@@ -2,6 +2,7 @@ package com.Petcare.Petcare.Services.Implement;
 
 import com.Petcare.Petcare.DTOs.PlatformFee.CreatePlatformFeeRequest;
 import com.Petcare.Petcare.DTOs.PlatformFee.PlatformFeeResponse;
+import com.Petcare.Petcare.Exception.Business.BookingNotFoundException;
 import com.Petcare.Petcare.Models.Booking.Booking;
 import com.Petcare.Petcare.Models.Invoice.Invoice;
 import com.Petcare.Petcare.Models.PlatformFee;
@@ -32,7 +33,7 @@ public class PlatformFeeServiceImplement implements PlatformFeeService {
 
         // 1. Validar la entrada y buscar la reserva
         Booking booking = bookingRepository.findById(request.getBookingId())
-                .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada con ID: " + request.getBookingId()));
+                .orElseThrow(() -> new BookingNotFoundException(request.getBookingId()));
 
         // 2. Lógica de negocio: Calcular los montos
         BigDecimal baseAmount = booking.getTotalPrice();

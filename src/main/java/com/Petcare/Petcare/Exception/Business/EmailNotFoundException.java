@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-public class ServiceOfferingNotFoundException extends RuntimeException {
-    public ServiceOfferingNotFoundException(Long id) {
-        super("Service offering not found with id: " + id);
+public class EmailNotFoundException extends RuntimeException {
+    public EmailNotFoundException(String email) {
+        super("Email not found: " + email);
     }
 }

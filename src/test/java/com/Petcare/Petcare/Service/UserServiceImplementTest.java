@@ -282,8 +282,8 @@ class UserServiceImplementTest {
      * inmediatamente.
      */
     @Test
-    @DisplayName("registerUserSitter | Falla | Debería lanzar IllegalArgumentException si el email ya está en uso")
-    void registerUserSitter_WhenEmailIsTaken_ShouldThrowIllegalArgumentException() {
+    @DisplayName("registerUserSitter | Falla | Debería lanzar EmailAlreadyExistsException si el email ya está en uso")
+    void registerUserSitter_WhenEmailIsTaken_ShouldThrowEmailAlreadyExistsException() {
         CreateUserRequest sitterRequest = new CreateUserRequest(
                 "Sitter",
                 "Test",
@@ -297,7 +297,7 @@ class UserServiceImplementTest {
         when(userRepository.findByEmail(sitterRequest.getEmail())).thenReturn(Optional.of(user));
 
         // La operación debe fallar inmediatamente con la excepción apropiada
-        assertThrows(IllegalArgumentException.class, () -> userService.registerUserSitter(sitterRequest));
+        assertThrows(EmailAlreadyExistsException.class, () -> userService.registerUserSitter(sitterRequest));
     }
 
     /**
@@ -319,7 +319,7 @@ class UserServiceImplementTest {
 
         // Verificamos tanto el tipo como el mensaje de la excepción
         assertThatThrownBy(() -> userService.registerUserSitter(sitterRequest))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(EmailAlreadyExistsException.class)
                 .hasMessage("El email ya está registrado: " + sitterRequest.getEmail());
 
         // Es importante verificar que NO se ejecutaron operaciones de guardado
@@ -390,7 +390,7 @@ class UserServiceImplementTest {
 
         // La operación debe fallar con el mensaje apropiado
         assertThatThrownBy(() -> userService.registerUser(clientRequest))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(EmailAlreadyExistsException.class)
                 .hasMessage("El email ya está registrado: " + clientRequest.getEmail());
 
         // Ninguna operación de guardado debe ejecutarse
@@ -666,8 +666,8 @@ class UserServiceImplementTest {
      * de los datos.
      */
     @Test
-    @DisplayName("updateUser | Debería lanzar IllegalArgumentException si el nuevo email ya está en uso")
-    void updateUser_WhenNewEmailIsTaken_ShouldThrowIllegalArgumentException() {
+    @DisplayName("updateUser | Debería lanzar EmailAlreadyExistsException si el nuevo email ya está en uso")
+    void updateUser_WhenNewEmailIsTaken_ShouldThrowEmailAlreadyExistsException() {
         Long userId = 1L;
         String takenEmail = "email.usado@example.com";
         UpdateUserRequest updateRequest = new UpdateUserRequest(
@@ -783,8 +783,8 @@ class UserServiceImplementTest {
      * integridad de datos básica como la unicidad del email.
      */
     @Test
-    @DisplayName("createUserByAdmin | Debería lanzar IllegalArgumentException si el email ya existe")
-    void createUserByAdmin_WhenEmailIsTaken_ShouldThrowIllegalArgumentException() {
+    @DisplayName("createUserByAdmin | Debería lanzar EmailAlreadyExistsException si el email ya existe")
+    void createUserByAdmin_WhenEmailIsTaken_ShouldThrowEmailAlreadyExistsException() {
         CreateUserRequest adminRequest = new CreateUserRequest(
                 "AdminCreated", "Sitter", "email.existente@example.com",
                 "password123", "Admin Address", "555-9999"
@@ -796,7 +796,7 @@ class UserServiceImplementTest {
 
         // La operación debe fallar
         assertThatThrownBy(() -> userService.createUserByAdmin(adminRequest, specifiedRole))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(EmailAlreadyExistsException.class)
                 .hasMessage("El email ya está registrado: " + adminRequest.getEmail());
 
         // No debe guardarse nada
@@ -878,7 +878,7 @@ class UserServiceImplementTest {
         // Intentar cambiar el estado de un usuario que no existe debe fallar
         assertThatThrownBy(() -> userService.toggleUserActive(nonExistentUserId, true))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Usuario no encontrado con id " + nonExistentUserId);
+                .hasMessage("Usuario no encontrado con el ID " + nonExistentUserId);
 
         verify(userRepository, never()).save(any(User.class));
     }
